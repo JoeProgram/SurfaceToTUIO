@@ -10,3 +10,15 @@ C:\dev\SurfaceToTUIO\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.exe.manifest
 C:\dev\SurfaceToTUIO\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.application
 C:\dev\SurfaceToTUIO\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.exe.manifest
 C:\dev\SurfaceToTUIO\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.application
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.exe.config
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.exe
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.pdb
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\Resources\icon.png
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\Resources\iconPreview.png
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.exe.manifest
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.application
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.exe
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\bin\x86\Debug\SurfaceToTUIO.pdb
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.exe.manifest
+C:\Users\mTBI1\Downloads\JoeProgram-SurfaceToTUIO-1c828c4\JoeProgram-SurfaceToTUIO-1c828c4\SurfaceToTUIO\obj\x86\Debug\SurfaceToTUIO.application

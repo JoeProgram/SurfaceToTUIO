@@ -76,7 +76,7 @@ namespace SurfaceToTUIO
             IntPtr hWnd = Window.Handle;
             Form form = (Form)Form.FromHandle(hWnd);
             form.ShowInTaskbar = false;
-            form.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            //form.FormBorderStyle = FormBorderStyle.FixedToolWindow;
             form.SetDesktopBounds(-100, -100, 10, 10);
         }
       

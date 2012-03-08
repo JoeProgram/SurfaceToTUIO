@@ -51,6 +51,7 @@ namespace OSC.NET
 		{
 			int byteNum = 0;
 			byte[] data = packet.BinaryData;
+
 			try 
 			{
 				byteNum = this.udpClient.Send(data, data.Length);

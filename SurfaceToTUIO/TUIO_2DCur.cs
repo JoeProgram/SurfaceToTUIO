@@ -48,7 +48,7 @@ namespace SurfaceToTUIO
             message.Append("surface@" + localIP);
             return message;
         }
-        public static OSCMessage aliveMessage(ReadOnlyContactCollection contacts)
+        public static OSCMessage aliveMessage(ReadOnlyTouchPointCollection contacts)
         {
             OSCMessage message = new OSCMessage("/tuio/2Dcur");
             message.Append("alive");
@@ -58,7 +58,7 @@ namespace SurfaceToTUIO
             }
             return message;
         }
-        public static OSCMessage aliveMessage(List<Contact> contacts)
+        public static OSCMessage aliveMessage(List<TouchPoint> contacts)
         {
             OSCMessage message = new OSCMessage("/tuio/2Dcur");
             message.Append("alive");

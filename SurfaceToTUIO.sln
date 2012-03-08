@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurfaceToTUIO", "SurfaceToTUIO\SurfaceToTUIO.csproj", "{02ADC3C9-AB82-4081-BF9A-BABC463073D4}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup1", "Setup1\Setup1.vdproj", "{C8CA7665-1B12-41F6-835C-8A94CDE895D3}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SurfaceToTUIOSetup", "SurfaceToTUIOSetup\SurfaceToTUIOSetup.vdproj", "{BA0B243B-8E13-4361-9063-631E0256F3FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,10 @@ Global
 		{02ADC3C9-AB82-4081-BF9A-BABC463073D4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{02ADC3C9-AB82-4081-BF9A-BABC463073D4}.Release|x86.ActiveCfg = Release|x86
 		{02ADC3C9-AB82-4081-BF9A-BABC463073D4}.Release|x86.Build.0 = Release|x86
-		{C8CA7665-1B12-41F6-835C-8A94CDE895D3}.Debug|Any CPU.ActiveCfg = Debug
-		{C8CA7665-1B12-41F6-835C-8A94CDE895D3}.Debug|x86.ActiveCfg = Debug
-		{C8CA7665-1B12-41F6-835C-8A94CDE895D3}.Release|Any CPU.ActiveCfg = Release
-		{C8CA7665-1B12-41F6-835C-8A94CDE895D3}.Release|x86.ActiveCfg = Release
+		{BA0B243B-8E13-4361-9063-631E0256F3FC}.Debug|Any CPU.ActiveCfg = Debug
+		{BA0B243B-8E13-4361-9063-631E0256F3FC}.Debug|x86.ActiveCfg = Debug
+		{BA0B243B-8E13-4361-9063-631E0256F3FC}.Release|Any CPU.ActiveCfg = Release
+		{BA0B243B-8E13-4361-9063-631E0256F3FC}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

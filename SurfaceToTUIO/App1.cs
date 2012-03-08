@@ -37,19 +37,23 @@
 */
 
 using System;
+//using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Input.Manipulations;
+using System.Diagnostics;
 using Microsoft.Surface;
 using Microsoft.Surface.Core;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Storage;
+//using Microsoft.Xna.Framework.Audio;
+//using Microsoft.Xna.Framework.Content;
+//using Microsoft.Xna.Framework.Graphics;
+//using Microsoft.Xna.Framework.Input;
+//using Microsoft.Xna.Framework.Storage;
 using OSC.NET;
-using Microsoft.Surface.Core.Manipulations;
+//using Microsoft.Surface.Core.Manipulations;
 
 namespace SurfaceToTUIO
 {
@@ -60,27 +64,27 @@ namespace SurfaceToTUIO
     {
         private OSCTransmitter _OSCSender { get; set; }
 
-        private ContactTarget contactTarget;
+        private TouchTarget contactTarget;
         private UserOrientation currentOrientation = UserOrientation.Bottom;
         private Color backgroundColor = new Color(81, 81, 81);
         private bool applicationLoadCompleteSignalled;
         private Matrix screenTransform = Matrix.Identity;
-        ReadOnlyContactCollection previousContacts;
+        ReadOnlyTouchPointCollection previousContacts;
         // application state: Activated, Previewed, Deactivated,
         // start in Activated state
         private bool isApplicationActivated = true;
         private bool isApplicationPreviewed;
         private int _Frame { get; set; }
 
-
         // Dictionary containing the Manipulation Data for a single Contact
         // This is used for getting the Contact velocity from Surface SDK
-        private Dictionary<int, Affine2DOperationDeltaEventArgs> _contactManipulationData = new Dictionary<int, Affine2DOperationDeltaEventArgs>();
+        //private Dictionary<int, Affine2DOperationDeltaEventArgs> _contactManipulationData = new Dictionary<int, Affine2DOperationDeltaEventArgs>();
+        private Dictionary<int, Manipulation2DDeltaEventArgs> _contactManipulationData = new Dictionary<int, Manipulation2DDeltaEventArgs>();
 
         // Dictionary containing the Manipulation Processor for a single Contact
         // This is used for getting the Contact velocity from Surface SDK
-        private Dictionary<int, Affine2DManipulationProcessor> _contactProcessors = new Dictionary<int, Affine2DManipulationProcessor>();
-
+        //private Dictionary<int, Affine2DManipulationProcessor> _contactProcessors = new Dictionary<int, Affine2DManipulationProcessor>();
+        private Dictionary<int, ManipulationProcessor2D> _contactProcessors = new Dictionary<int, ManipulationProcessor2D>();
 
         // History Dictionaries
         // These are used for manually computing a Contact's Angular Velocity, Angular Acceleration and Movement Acceleration
@@ -92,7 +96,7 @@ namespace SurfaceToTUIO
         /// <summary>
         /// The target receiving all surface input for the application.
         /// </summary>
-        protected ContactTarget ContactTarget
+        protected TouchTarget ContactTarget
         {
             get { return contactTarget; }
         }
@@ -105,7 +109,7 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnAffine2DManipulationStarted(object sender, Affine2DOperationStartedEventArgs e)
+        private void OnAffine2DManipulationStarted(object sender, Manipulation2DStartedEventArgs e)
         {
 
         }
@@ -117,12 +121,12 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnAffine2DDelta(object sender, Affine2DOperationDeltaEventArgs e)
+        private void OnAffine2DDelta(object sender, Manipulation2DDeltaEventArgs e)
         {
-            ReadOnlyContactCollection currentContacts = contactTarget.GetState();
-            foreach (Contact c in currentContacts)
+            ReadOnlyTouchPointCollection currentContacts = contactTarget.GetState();
+            foreach (TouchPoint c in currentContacts)
             {
-                if (c.X == e.ManipulationOriginX && c.Y == e.ManipulationOriginY)
+                if (c.X == e.OriginX && c.Y == e.OriginY)
                 {
                     _contactManipulationData.Add(c.Id, e);
                 }
@@ -136,7 +140,7 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnAffine2DManipulationCompleted(object sender, Affine2DOperationCompletedEventArgs e)
+        private void OnAffine2DManipulationCompleted(object sender, Manipulation2DCompletedEventArgs e)
         {
         }
         #endregion
@@ -148,10 +152,11 @@ namespace SurfaceToTUIO
         {
             Program.PositionWindow(Window);
 
-            Form form = (Form)Form.FromHandle(Window.Handle);
+            //Form form = (Form)Form.FromHandle(Window.Handle);
             
         }
 
+        #region Basic Functionality
         /// <summary>
         /// Allows the app to perform any initialization it needs to before starting to run.
         /// This is where it can query for any required services and load any non-graphic
@@ -166,12 +171,17 @@ namespace SurfaceToTUIO
             InitializeSurfaceInput();
 
             // Set the application's orientation based on the current launcher orientation
-            currentOrientation = ApplicationLauncher.Orientation;
+            currentOrientation = ApplicationServices.InitialOrientation;
 
             // Subscribe to surface application activation events
-            ApplicationLauncher.ApplicationActivated += OnApplicationActivated;
-            ApplicationLauncher.ApplicationPreviewed += OnApplicationPreviewed;
-            ApplicationLauncher.ApplicationDeactivated += OnApplicationDeactivated;
+            ApplicationServices.WindowInteractive += OnApplicationActivated;
+            //ApplicationLauncher.ApplicationActivated += OnApplicationActivated;
+
+            ApplicationServices.WindowNoninteractive += OnApplicationPreviewed;
+            //ApplicationLauncher.ApplicationPreviewed += OnApplicationPreviewed;
+
+            ApplicationServices.WindowUnavailable += OnApplicationPreviewed;
+            //ApplicationLauncher.ApplicationDeactivated += OnApplicationDeactivated;
 
             // Setup the UI to transform if the UI is rotated.
             //if (currentOrientation == UserOrientation.Top)
@@ -206,8 +216,12 @@ namespace SurfaceToTUIO
             // and resize to take up the whole surface with no border.
 
             // Make sure the graphics device has the correct back buffer size.
-            InteractiveSurface interactiveSurface = InteractiveSurface.DefaultInteractiveSurface;
-
+//#warning Properties about the device are now on the InteractiveSurfaceDevice class. Check back.
+            InteractiveSurfaceDevice interactiveSurface = InteractiveSurface.PrimarySurfaceDevice;
+            Console.WriteLine("Bottom: " + interactiveSurface.Bottom.ToString() + "\nTop: " 
+                + interactiveSurface.Top.ToString() + "\nLeft: " 
+                + interactiveSurface.Left.ToString() + "\nRight: " 
+                + interactiveSurface.Right.ToString());
         }
 
         /// <summary>
@@ -226,9 +240,10 @@ namespace SurfaceToTUIO
                 return;
 
             // Create a target for surface input.
-            //contactTarget = new ContactTarget(Window.Handle, EventThreadChoice.OnBackgroundThread);
-            contactTarget = new ContactTarget(IntPtr.Zero, true);
+            //contactTarget = new TouchTarget(Window.Handle, EventThreadChoice.OnBackgroundThread);
+            contactTarget = new TouchTarget(System.IntPtr.Zero, true);
             contactTarget.EnableInput();
+            Console.WriteLine("Testing");
         }
 
         /// <summary>
@@ -249,38 +264,37 @@ namespace SurfaceToTUIO
         {
             if (isApplicationActivated || isApplicationPreviewed)
             {
-
-
                 _contactManipulationData.Clear();
 
                 // Want to identify all the contacts added or removed since the last update.
-                List<Contact> addedContacts = new List<Contact>();
-                List<Contact> removedContacts = new List<Contact>();
-                List<Contact> changedContacts = new List<Contact>();
-                List<Contact> aliveContacts = new List<Contact>();
+                List<TouchPoint> addedContacts = new List<TouchPoint>();
+                List<TouchPoint> removedContacts = new List<TouchPoint>();
+                List<TouchPoint> changedContacts = new List<TouchPoint>();
+                List<TouchPoint> aliveContacts = new List<TouchPoint>();
 
-                List<Contact> addedFingers = new List<Contact>();
-                List<Contact> removedFingers = new List<Contact>();
-                List<Contact> changedFingers = new List<Contact>();
-                List<Contact> aliveFingers = new List<Contact>();
+                List<TouchPoint> addedFingers = new List<TouchPoint>();
+                List<TouchPoint> removedFingers = new List<TouchPoint>();
+                List<TouchPoint> changedFingers = new List<TouchPoint>();
+                List<TouchPoint> aliveFingers = new List<TouchPoint>();
 
-                List<Contact> addedTags = new List<Contact>();
-                List<Contact> removedTags = new List<Contact>();
-                List<Contact> changedTags = new List<Contact>();
-                List<Contact> aliveTags = new List<Contact>();
+                List<TouchPoint> addedTags = new List<TouchPoint>();
+                List<TouchPoint> removedTags = new List<TouchPoint>();
+                List<TouchPoint> changedTags = new List<TouchPoint>();
+                List<TouchPoint> aliveTags = new List<TouchPoint>();
 
-                List<Contact> addedBlobs = new List<Contact>();
-                List<Contact> removedBlobs = new List<Contact>();
-                List<Contact> changedBlobs= new List<Contact>();
-                List<Contact> aliveBlobs = new List<Contact>();
+                List<TouchPoint> addedBlobs = new List<TouchPoint>();
+                List<TouchPoint> removedBlobs = new List<TouchPoint>();
+                List<TouchPoint> changedBlobs= new List<TouchPoint>();
+                List<TouchPoint> aliveBlobs = new List<TouchPoint>();
 
-                ReadOnlyContactCollection currentContacts = contactTarget.GetState();
+                ReadOnlyTouchPointCollection currentContacts = contactTarget.GetState();
 
                 // Write all unactive previous Contacts into the according removed-Lists
                 if (previousContacts != null) {
-                    foreach (Contact contact in previousContacts) {
-                        Contact c = null;
-                        currentContacts.TryGetContactFromId(contact.Id, out c);
+                    foreach (TouchPoint contact in previousContacts) {
+                        //Console.WriteLine("Touch: " + contact.X + ", " + contact.Y);
+                        TouchPoint c = null;
+                        currentContacts.TryGetTouchPointFromId(contact.Id, out c);
                         if (c == null) {
                             removedContacts.Add(contact);
                             if (contact.IsFingerRecognized && (Properties.Settings.Default.SendFingersAsBlobs == false || Properties.Settings.Default.SendFingersAlsoAsBlobs == true)) {
@@ -299,7 +313,7 @@ namespace SurfaceToTUIO
                     // Throw away unused Manipulation Processors
                     cleanManipulationProcessorList(removedContacts);
 
-                    foreach (Contact contact in currentContacts) {
+                    foreach (TouchPoint contact in currentContacts) {
                         aliveContacts.Add(contact);
 
                         // Put the Contact into the according List
@@ -313,8 +327,8 @@ namespace SurfaceToTUIO
                         } else {
                             aliveBlobs.Add(contact);
                         }
-                        Contact c = null;
-                        previousContacts.TryGetContactFromId(contact.Id, out c);
+                        TouchPoint c = null;
+                        previousContacts.TryGetTouchPointFromId(contact.Id, out c);
                         if (c != null) {
                             if (c.ToString() != contact.ToString()) {
                                 changedContacts.Add(contact);
@@ -352,10 +366,12 @@ namespace SurfaceToTUIO
                         }
                     }
 
-                    // Send the TUIO messages
+                    // Send the TUIO messages ////////////////////////////
+                    //Console.WriteLine("Sending...");
                     //sendTUIO_2DCur(changedFingers, previousContacts);
                     //sendTUIO_2DObj(changedTags, previousContacts);
                     //sendTUIO_2DBlb(changedBlobs, previousContacts);
+                    //////////////////////////////////////////////////////
                     
                     if (addedFingers.Count != 0 || changedFingers.Count != 0 || removedFingers.Count != 0) {
                         sendTUIO_2DCur(aliveFingers, previousContacts);
@@ -364,7 +380,7 @@ namespace SurfaceToTUIO
                         sendTUIO_2DObj(aliveTags, previousContacts);
                     }
                 } else {
-                    foreach (Contact c in currentContacts) {
+                    foreach (TouchPoint c in currentContacts) {
                         addedContacts.Add(c);
 
                         if (c.IsFingerRecognized) {
@@ -377,20 +393,20 @@ namespace SurfaceToTUIO
                 }
                 previousContacts = currentContacts;
 
-                foreach (Contact c in changedContacts) {
+                foreach (TouchPoint c in changedContacts) {
                     updateHistoryData(c.Id, c.FrameTimestamp);
                 }
-                foreach (Contact c in removedContacts) {
+                foreach (TouchPoint c in removedContacts) {
                     cleanHistory(c.Id);
                 }
             }
             base.Update(gameTime);
         }
 
+        #endregion
 
 
-
-#region Methods for computing Velocities and Accelerations
+        #region Methods for computing Velocities and Accelerations
 
         /// <summary>
         /// If possible, computes the motion acceleration
@@ -409,8 +425,8 @@ namespace SurfaceToTUIO
                 float lastVelocityX = _lastVelocity[id].X;
                 float lastVelocityY = _lastVelocity[id].Y;
 
-                float currentVelocityX = _contactManipulationData[id].VelocityX;
-                float currentVelocityY = _contactManipulationData[id].VelocityY;
+                float currentVelocityX = _contactManipulationData[id].Velocities.LinearVelocityX; // VelocityX;
+                float currentVelocityY = _contactManipulationData[id].Velocities.LinearVelocityY; // VelocityY;
 
                 double lastSpeed = Math.Sqrt(Math.Pow((double)lastVelocityX, 2.0) + Math.Pow((double)lastVelocityY, 2.0));
                 double currentSpeed = Math.Sqrt(Math.Pow((double)currentVelocityX, 2.0) + Math.Pow((double)currentVelocityY, 2.0));
@@ -438,7 +454,7 @@ namespace SurfaceToTUIO
         /// <param name="previousContact"></param>
         /// <param name="angularVelocity">Output parameter for the angular velocity</param>
         /// <param name="angularAcceleration">Output parameter for the angular acceleration</param>
-        public void computeAngularVelocity(Contact currentContact, Contact previousContact, out float angularVelocity, out float angularAcceleration)
+        public void computeAngularVelocity(TouchPoint currentContact, TouchPoint previousContact, out float angularVelocity, out float angularAcceleration)
         {
             angularVelocity = 0.0f;
             angularAcceleration = 0.0f;
@@ -477,21 +493,21 @@ namespace SurfaceToTUIO
         /// <param name="velocityX">Output parameter</param>
         /// <param name="velocityY">Output parameter</param>
         /// <param name="surface">Object representing the Surface</param>
-        public void getVelocity(int id, out float velocityX, out float velocityY, InteractiveSurface surface)
+        public void getVelocity(int id, out float velocityX, out float velocityY) //, InteractiveSurface surface)
         {
             velocityX = 0.0f;
             velocityY = 0.0f;
 
             if (_contactManipulationData.ContainsKey(id))
             {
-                velocityX = _contactManipulationData[id].VelocityX;
-                velocityY = _contactManipulationData[id].VelocityY;
+                velocityX = _contactManipulationData[id].Velocities.LinearVelocityX; // VelocityX;
+                velocityY = _contactManipulationData[id].Velocities.LinearVelocityY; // VelocityY;
 
                 velocityX = velocityX * 1000.0f;
                 velocityY = velocityY * 1000.0f;
 
-                velocityX = velocityX / surface.Width;
-                velocityY = velocityY / surface.Height;
+                velocityX = velocityX / InteractiveSurface.PrimarySurfaceDevice.Width;
+                velocityY = velocityY / InteractiveSurface.PrimarySurfaceDevice.Height;
             }
         }
 
@@ -533,12 +549,12 @@ namespace SurfaceToTUIO
             // Retrieve the velocity values from the ManipulationProcessor and write them into the history Dictionaries
             if (_lastVelocity.ContainsKey(id))
             {
-                _lastVelocity[id] = new Vector2(_contactManipulationData[id].VelocityX, _contactManipulationData[id].VelocityY);
+                _lastVelocity[id] = new Vector2(_contactManipulationData[id].Velocities.LinearVelocityX, _contactManipulationData[id].Velocities.LinearVelocityY);
                 _manipulationDataTimestamp[id] = frameTimestamp;
             }
             else
             {
-                _lastVelocity.Add(id, new Vector2(_contactManipulationData[id].VelocityX, _contactManipulationData[id].VelocityY));
+                _lastVelocity.Add(id, new Vector2(_contactManipulationData[id].Velocities.LinearVelocityX, _contactManipulationData[id].Velocities.LinearVelocityY));
                 _manipulationDataTimestamp.Add(id, frameTimestamp);
             }
         }
@@ -549,38 +565,51 @@ namespace SurfaceToTUIO
 
 
 
-        public void processContactManipulator(Contact c, ReadOnlyContactCollection currentContacts, ReadOnlyContactCollection previousContacts)
+        public void processContactManipulator(TouchPoint c, ReadOnlyTouchPointCollection currentContacts, ReadOnlyTouchPointCollection previousContacts)
         {
-            List<Manipulator> removedManipulators = new List<Manipulator>();
+            List<Manipulator2D> removedManipulators = new List<Manipulator2D>();
 
             if (previousContacts != null)
             {
                 // Find all the contacts that were removed since the last check.
-                foreach (Contact contact in previousContacts)
+                foreach (TouchPoint contact in previousContacts)
                 {
                     // Create a temporary variable for the following method call.
-                    Contact tempContact;
+                    TouchPoint tempContact;
 
                     // Determine if the Contact object from the previous list is in the current list.
-                    if (!currentContacts.TryGetContactFromId(contact.Id, out tempContact))
+                    if (!currentContacts.TryGetTouchPointFromId(contact.Id, out tempContact))
                     {
                         // The contact was not found in the list of current contacts, so it has been removed.
 
                         // Copy the Contact object information to a new Manipulator object and add 
                         // the Manipulator object to the removedManipulators list.
-                        removedManipulators.Add(new Manipulator(contact.Id, contact.X, contact.Y));
+                        removedManipulators.Add(new Manipulator2D(contact.Id, contact.X, contact.Y));
                     }
                 }
             }
 
-            
-            List<Manipulator> currentManipulator = new List<Manipulator>();
-            currentManipulator.Add(new Manipulator(c.Id, c.X, c.Y));
+
+            List<Manipulator2D> currentManipulator = new List<Manipulator2D>();
+            currentManipulator.Add(new Manipulator2D(c.Id, c.X, c.Y));
             if (_contactProcessors.ContainsKey(c.Id))
             {
-                _contactProcessors[c.Id].ProcessManipulators(currentManipulator, removedManipulators);
+                //_contactProcessors[c.Id].ProcessManipulators(currentManipulator, removedManipulators);
+                _contactProcessors[c.Id].ProcessManipulators(Timestamp, removedManipulators);
             }
         }
+
+        #region Timestamp
+        private long Timestamp
+        {
+            get
+            {
+                // Get timestamp in 100-nanosecond units.
+                double nanosecondsPerTick = 1000000000.0 / System.Diagnostics.Stopwatch.Frequency;
+                return (long)(System.Diagnostics.Stopwatch.GetTimestamp() / nanosecondsPerTick / 100.0);
+            }
+        }
+        #endregion
 
 
         /// <summary>
@@ -588,21 +617,21 @@ namespace SurfaceToTUIO
         /// This way we can use the Manipulator data even if there are multiple Contacts
         /// </summary>
         /// <param name="c">Contact to add the Manipulator to</param>
-        public void addManipulationProcessor(Contact c)
+        public void addManipulationProcessor(TouchPoint c)
         {
-            Affine2DManipulations supportedManipulations =
-                  Affine2DManipulations.TranslateX | Affine2DManipulations.TranslateY | Affine2DManipulations.Rotate | Affine2DManipulations.Scale;
+            Manipulations2D supportedManipulations =
+                  Manipulations2D.TranslateX | Manipulations2D.TranslateY | Manipulations2D.Rotate | Manipulations2D.Scale;
 
             // Create and initialize a manipulation processor with the supported manipulations.
-            Affine2DManipulationProcessor mp = new Affine2DManipulationProcessor(supportedManipulations);
+            ManipulationProcessor2D mp = new ManipulationProcessor2D(supportedManipulations);
 
             // Add event handlers for manipulation events.
-            mp.Affine2DManipulationStarted +=
-                new EventHandler<Affine2DOperationStartedEventArgs>(OnAffine2DManipulationStarted);
-            mp.Affine2DManipulationCompleted +=
-                new EventHandler<Affine2DOperationCompletedEventArgs>(OnAffine2DManipulationCompleted);
-            mp.Affine2DManipulationDelta +=
-                new EventHandler<Affine2DOperationDeltaEventArgs>(OnAffine2DDelta);
+            mp.Started +=
+                new EventHandler<Manipulation2DStartedEventArgs>(OnAffine2DManipulationStarted);
+            mp.Completed +=
+                new EventHandler<Manipulation2DCompletedEventArgs>(OnAffine2DManipulationCompleted);
+            mp.Delta +=
+                new EventHandler<Manipulation2DDeltaEventArgs>(OnAffine2DDelta);
 
             _contactProcessors.Add(c.Id, mp);
         }
@@ -611,9 +640,9 @@ namespace SurfaceToTUIO
         /// Removes ManipulationProcessor assigned to removed Contacts
         /// </summary>
         /// <param name="removedContacts"></param>
-        public void cleanManipulationProcessorList(List<Contact> removedContacts)
+        public void cleanManipulationProcessorList(List<TouchPoint> removedContacts)
         {
-            foreach (Contact c in removedContacts)
+            foreach (TouchPoint c in removedContacts)
             {
                 if( _contactProcessors.ContainsKey( c.Id ) )
                 {
@@ -631,10 +660,14 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="contacts">Current acitve Contacts</param>
         /// <param name="previousContacts">Contacts from the previous frame</param>
-        public void sendTUIO_2DObj(List<Contact> contacts, ReadOnlyContactCollection previousContacts)
+        public void sendTUIO_2DObj(List<TouchPoint> contacts, ReadOnlyTouchPointCollection previousContacts)
         {
             //if (contacts.Count == 0) return;
-            InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurface.DefaultInteractiveSurface;
+//#warning Properties about the device are now on the InteractiveSurfaceDevice class.
+            //InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurfaceDevice.PrimarySurfaceDevice;
+            //double width = InteractiveSurface.PrimarySurfaceDevice.Right - InteractiveSurface.PrimarySurfaceDevice.Left;
+            //double height = InteractiveSurface.PrimarySurfaceDevice.Bottom - InteractiveSurface.PrimarySurfaceDevice.Top;
+            InteractiveSurfaceDevice surface = InteractiveSurface.PrimarySurfaceDevice;
             double width = surface.Right - surface.Left;
             double height = surface.Bottom - surface.Top;
 
@@ -647,34 +680,34 @@ namespace SurfaceToTUIO
 
             for (int i = 0; i < contacts.Count; i++)
             {
-                Contact c = contacts[i];
-                double x = (c.CenterX-surface.Left)/width;
-                double y = (c.CenterY-surface.Top)/height;
+                TouchPoint c = contacts[i];
+                double x = (c.CenterX - surface.Left) / width;
+                double y = (c.CenterY - surface.Top) / height;
 
                 float angularVelocity = 0.0f;
                 float angularAcceleration = 0.0f;
 
                 if( previousContacts.Contains( c.Id ))
                 {
-                    computeAngularVelocity(c, previousContacts.GetContactFromId(c.Id), out angularVelocity, out angularAcceleration);
+                    computeAngularVelocity(c, previousContacts.GetTouchPointFromId(c.Id), out angularVelocity, out angularAcceleration);
                 }
                 
                 float X = 0.0f;
                 float Y = 0.0f;
-                getVelocity(c.Id, out X, out Y, surface);
+                getVelocity(c.Id, out X, out Y); //, InteractiveSurface.PrimarySurfaceDevice.);
                 float motionAcceleration = 0.0f;
                 getMotionAcceleration(c.Id, out motionAcceleration, c.FrameTimestamp);
 
-                if (c.Tag.Type == TagType.Byte)
+                //if (c.Tag.Value)
                 {
-                    OSCMessage setMessage = TUIO_2DObj.setMessage(c.Id, (int)c.Tag.Byte.Value, (float)x, (float)y, (float)c.Orientation, X, Y, angularVelocity, motionAcceleration, angularAcceleration);
+                    OSCMessage setMessage = TUIO_2DObj.setMessage(c.Id, (int)c.Tag.Value, (float)x, (float)y, (float)c.Orientation, X, Y, angularVelocity, motionAcceleration, angularAcceleration);
                     objectBundle.Append(setMessage);
                 }
-                else if (c.Tag.Type == TagType.Identity)
+                /*else if (c.Tag.Series)
                 {
-                    OSCMessage setMessage = TUIO_2DObj.setMessage(c.Id, (int)c.Tag.Identity.Value, (float)x, (float)y, (float)c.Orientation, X, Y, angularVelocity, motionAcceleration, angularAcceleration);
+                    OSCMessage setMessage = TUIO_2DObj.setMessage(c.Id, (int)c.Tag.Series, (float)x, (float)y, (float)c.Orientation, X, Y, angularVelocity, motionAcceleration, angularAcceleration);
                     objectBundle.Append(setMessage);
-                }
+                }*/
 
             }
             OSCMessage frameMessage = TUIO_2DObj.frameMessage(_Frame);
@@ -690,10 +723,14 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="contacts">Current active contacts</param>
         /// <param name="previousContacts">Contacts from the previous frame</param>
-        public void sendTUIO_2DCur(List<Contact> contacts, ReadOnlyContactCollection previousContacts)
+        public void sendTUIO_2DCur(List<TouchPoint> contacts, ReadOnlyTouchPointCollection previousContacts)
         {
             //if (contacts.Count == 0) return;
-            InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurface.DefaultInteractiveSurface;
+//#warning Properties about the device are now on the InteractiveSurfaceDevice class.
+            //InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurface.PrimarySurfaceDevice;
+            //double width = InteractiveSurface.PrimarySurfaceDevice.Right - InteractiveSurface.PrimarySurfaceDevice.Left;
+            //double height = InteractiveSurface.PrimarySurfaceDevice.Bottom - InteractiveSurface.PrimarySurfaceDevice.Top;
+            InteractiveSurfaceDevice surface = InteractiveSurface.PrimarySurfaceDevice;
             double width = surface.Right - surface.Left;
             double height = surface.Bottom - surface.Top;
 
@@ -706,20 +743,19 @@ namespace SurfaceToTUIO
 
             for (int i = 0; i < contacts.Count; i++)
             {
-                Contact c = contacts[i];
+                TouchPoint c = contacts[i];
 
                 double x = (c.CenterX - surface.Left) / width;
                 double y = (c.CenterY - surface.Top) / height;
 
                 float X = 0.0f;
                 float Y = 0.0f;
-                getVelocity(c.Id, out X, out Y, surface);
+                getVelocity(c.Id, out X, out Y); //, surface);
                 float motionAcceleration = 0.0f;
                 getMotionAcceleration(c.Id, out motionAcceleration, c.FrameTimestamp);
 
                 OSCMessage setMessage = TUIO_2DCur.setMessage(c.Id, (float)x, (float)y, X, Y, motionAcceleration);
                 cursorBundle.Append(setMessage);
-
             }
             OSCMessage frameMessage = TUIO_2DCur.frameMessage(_Frame);
             cursorBundle.Append(frameMessage);
@@ -734,10 +770,14 @@ namespace SurfaceToTUIO
         /// </summary>
         /// <param name="contacts">Current active contacts</param>
         /// <param name="previousContacts">Contacts from the previous frame</param>
-        public void sendTUIO_2DBlb(List<Contact> contacts, ReadOnlyContactCollection previousContacts)
+        public void sendTUIO_2DBlb(List<TouchPoint> contacts, ReadOnlyTouchPointCollection previousContacts)
         {
             //if (contacts.Count == 0) return;
-            InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurface.DefaultInteractiveSurface;
+//#warning Properties about the device are now on the InteractiveSurfaceDevice class.
+            //InteractiveSurface surface = Microsoft.Surface.Core.InteractiveSurface.PrimarySurfaceDevice;
+            //double width = InteractiveSurface.PrimarySurfaceDevice.Right - InteractiveSurface.PrimarySurfaceDevice.Left;
+            //double height = InteractiveSurface.PrimarySurfaceDevice.Bottom - InteractiveSurface.PrimarySurfaceDevice.Top;
+            InteractiveSurfaceDevice surface = InteractiveSurface.PrimarySurfaceDevice;
             double width = surface.Right - surface.Left;
             double height = surface.Bottom - surface.Top;
 
@@ -750,11 +790,11 @@ namespace SurfaceToTUIO
 
             for (int i = 0; i < contacts.Count; i++)
             {
-                Contact c = contacts[i];
+                TouchPoint c = contacts[i];
                 double x = (c.CenterX - surface.Left) / width;
                 double y = (c.CenterY - surface.Top) / height;
-                double w = c.MajorAxis/surface.Width;
-                double h = c.MinorAxis/surface.Height;
+                double w = c.MajorAxis / surface.Width;
+                double h = c.MinorAxis / surface.Height;
                 double f = c.PhysicalArea / (surface.Width * surface.Height);
 
                 float angularVelocity = 0.0f;
@@ -762,12 +802,12 @@ namespace SurfaceToTUIO
 
                 if (previousContacts.Contains(c.Id))
                 {
-                    computeAngularVelocity(c, previousContacts.GetContactFromId(c.Id), out angularVelocity, out angularAcceleration);
+                    computeAngularVelocity(c, previousContacts.GetTouchPointFromId(c.Id), out angularVelocity, out angularAcceleration);
                 }
 
                 float X = 0.0f;
                 float Y = 0.0f;
-                getVelocity(c.Id, out X, out Y, surface);
+                getVelocity(c.Id, out X, out Y); //, surface);
                 
                 float motionAcceleration = 0.0f;
                 getMotionAcceleration(c.Id, out motionAcceleration, c.FrameTimestamp);
@@ -794,7 +834,7 @@ namespace SurfaceToTUIO
             if (!applicationLoadCompleteSignalled)
             {
                 // Dismiss the loading screen now that we are starting to draw
-                ApplicationLauncher.SignalApplicationLoadComplete();
+                ApplicationServices.SignalApplicationLoadComplete();
                 applicationLoadCompleteSignalled = true;
             }
 
