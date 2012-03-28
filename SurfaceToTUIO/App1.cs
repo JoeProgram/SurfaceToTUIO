@@ -123,12 +123,20 @@ namespace SurfaceToTUIO
         /// <param name="e"></param>
         private void OnAffine2DDelta(object sender, Manipulation2DDeltaEventArgs e)
         {
+
             ReadOnlyTouchPointCollection currentContacts = contactTarget.GetState();
             foreach (TouchPoint c in currentContacts)
             {
                 if (c.X == e.OriginX && c.Y == e.OriginY)
                 {
-                    _contactManipulationData.Add(c.Id, e);
+                    // BugFix
+                    // Apparently this event handling is not thread-safe
+                    // Once the surface is reporting a bunch of touches (~30 in testing)
+                    // It will try to add a moving touch multiple times to this dictionary.
+                    // 
+                    // I've fixed this by only taking the last touch
+                    // and just skip all the inbetween touches.
+                    _contactManipulationData[c.Id] = e;
                 }
             }            
         }
