@@ -25,6 +25,21 @@
 *  along with SurfaceToTUIO.  If not, see <http://www.gnu.org/licenses/>.
 *
 ***************************************************************************************/
+/***************************************************************************************
+*
+*  SurfaceToTUIO 
+*    for Surface 2 Authors:	Paul-Jacques Dupre, Joe France
+*  Mail:			josephfrance@gmail.com
+*  
+*				http://bluemarblegamecompany.com
+*
+*  This version of SurfaceToTUIO updates the original code with these changes:
+*	- Code is now compatibile with Microsoft Surface 2.0
+*	- A fullscreen gray screen no longer appears when the program is run
+*	- The installer gets the program to run silently on startup
+*	- Various Bugfixes.
+*
+****************************************************************************************/
 
 SurfaceToTUIO
 -------------
