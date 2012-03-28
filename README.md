@@ -1,10 +1,7 @@
-Fork of the original SurfaceToTUIO program found in the Squidy Interaction Library. Original authors Toni Schmidt and Martin Kaltenbrunner.
+Fork of the SurfaceToTUIO program found in the Squidy Interaction Library. Original authors Toni Schmidt and Martin Kaltenbrunner. Additional author Julian Stahnke.
 
-This fork fixes the following:
-
-* Last finger/fiducial not being removed properly.
-* It also sends out messages only if anything has changed, avoiding to spam and overload certain clients (\*cough\* Flash implementations, \*cough\*).
+This fork enables SurfaceToTUIO to work with the Microsoft Surface v2, as well as removing the fullscreen gray window and several bugfixes.
 
 Original source URL: https://svn.squidy-lib.de/svn/clients/SurfaceToTUIO/trunk/
 
-Modifications by Julian Stahnke, FH Potsdam, October 2010.
+Modifications by Paul-Jacques Dupre and Joe France.
