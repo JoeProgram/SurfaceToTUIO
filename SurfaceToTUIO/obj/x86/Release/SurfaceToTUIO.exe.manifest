@@ -99,7 +99,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>Bni4JqwwTBagRNr1PbX2bfK2DoE=</dsig:DigestValue>
+        <dsig:DigestValue>7bJatGJ2K0lydCLCg5wW85BCnjo=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -127,7 +127,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-      <dsig:DigestValue>emRkNLQR8DIV6AVSeBi8YJd6HCk=</dsig:DigestValue>
+      <dsig:DigestValue>ck/QP5AIUgp34unWQPkrpQ0gye4=</dsig:DigestValue>
     </hash>
   </file>
   <file name="SurfaceToTUIO.xml" size="2353" writeableType="applicationData">

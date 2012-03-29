@@ -39,6 +39,7 @@
 using System;
 //using System.Drawing;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
@@ -251,7 +252,6 @@ namespace SurfaceToTUIO
             //contactTarget = new TouchTarget(Window.Handle, EventThreadChoice.OnBackgroundThread);
             contactTarget = new TouchTarget(System.IntPtr.Zero, true);
             contactTarget.EnableInput();
-            Console.WriteLine("Testing");
         }
 
         /// <summary>
@@ -306,6 +306,7 @@ namespace SurfaceToTUIO
                         if (c == null) {
                             removedContacts.Add(contact);
                             if (contact.IsFingerRecognized && (Properties.Settings.Default.SendFingersAsBlobs == false || Properties.Settings.Default.SendFingersAlsoAsBlobs == true)) {
+                                Console.WriteLine("Removing Finger: " + contact.Id);
                                 removedFingers.Add(contact);
                             }
                             if (contact.IsFingerRecognized && (Properties.Settings.Default.SendFingersAsBlobs == true || Properties.Settings.Default.SendFingersAlsoAsBlobs == true)) {
